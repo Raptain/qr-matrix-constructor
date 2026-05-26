@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center py-5">
+    <h1>🎨 Конструктор матричных кодов</h1>
+    <p class="lead">Создавайте кастомизированные QR-коды и другие матричные коды</p>
+    <div class="row mt-5">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3>✅ QR Code</h3>
+                    <p>Самый популярный тип кода</p>
+                    <a href="/qr" class="btn btn-primary">Создать QR</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3>🔲 Data Matrix</h3>
+                    <p>Компактный код для малых размеров</p>
+                    <a href="/datamatrix" class="btn btn-secondary">Скоро</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3>📐 Aztec</h3>
+                    <p>Код для билетов и транспорта</p>
+                    <a href="/aztec" class="btn btn-secondary">Скоро</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3>📄 PDF417</h3>
+                    <p>Для документов и водительских прав</p>
+                    <a href="/pdf417" class="btn btn-secondary">Скоро</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

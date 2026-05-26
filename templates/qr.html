@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        <h3>📝 Ввод данных</h3>
+        
+        <div class="mb-3">
+            <label class="form-label">Тип данных:</label>
+            <select id="input-type" class="form-select">
+                <option value="text">📄 Текст</option>
+                <option value="url">🌐 URL</option>
+                <option value="wifi">📶 Wi-Fi</option>
+                <option value="sms">💬 SMS</option>
+                <option value="email">📧 E-mail</option>
+                <option value="contact">👤 Контакт (vCard)</option>
+            </select>
+        </div>
+
+        <div id="field-text">
+            <label class="form-label">Текст:</label>
+            <input type="text" id="text-content" class="form-control" placeholder="Введите текст">
+        </div>
+        <div id="field-url" style="display:none;">
+            <label class="form-label">URL:</label>
+            <input type="url" id="url-content" class="form-control" placeholder="https://example.com">
+        </div>
+        <div id="field-wifi" style="display:none;">
+            <label>SSID:</label><input type="text" id="wifi-ssid" class="form-control">
+            <label class="mt-2">Пароль:</label><input type="text" id="wifi-password" class="form-control">
+            <label class="mt-2">Шифрование:</label>
+            <select id="wifi-encryption" class="form-select">
+                <option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Без пароля</option>
+            </select>
+        </div>
+        <div id="field-sms" style="display:none;">
+            <label>Номер:</label><input type="tel" id="sms-phone" class="form-control">
+            <label class="mt-2">Сообщение:</label><textarea id="sms-message" class="form-control" rows="2"></textarea>
+        </div>
+        <div id="field-email" style="display:none;">
+            <label>Email:</label><input type="email" id="email-address" class="form-control">
+            <label class="mt-2">Тема:</label><input type="text" id="email-subject" class="form-control">
+            <label class="mt-2">Текст:</label><textarea id="email-body" class="form-control" rows="2"></textarea>
+        </div>
+        <div id="field-contact" style="display:none;">
+            <label>Имя:</label><input type="text" id="contact-name" class="form-control">
+            <label class="mt-2">Телефон:</label><input type="tel" id="contact-phone" class="form-control">
+            <label class="mt-2">Email:</label><input type="email" id="contact-email" class="form-control">
+        </div>
+
+        <hr>
+        <h4>🎨 Кастомизация</h4>
+        <div class="row">
+            <div class="col-6"><label>Цвет кода:</label><input type="color" id="fg-color" value="#000000" class="form-control"></div>
+            <div class="col-6"><label>Цвет фона:</label><input type="color" id="bg-color" value="#ffffff" class="form-control"></div>
+        </div>
+        <div class="mt-2"><label>Стиль глаз:</label>
+            <select id="eye-style" class="form-select"><option value="square">Квадратные</option><option value="circle">Круглые</option><option value="rounded">Скруглённые</option></select>
+        </div>
+        <div class="mt-2"><label>Форма:</label>
+            <select id="shape" class="form-select"><option value="square">Квадрат</option><option value="circle">Круг</option><option value="heart">Сердце</option></select>
+        </div>
+        <div class="mt-2"><label>Логотип (PNG):</label><input type="file" id="logo-file" accept="image/png,image/jpeg" class="form-control"></div>
+        <div class="mt-2"><label>Размер лого: <span id="logo-size-value">80</span> px</label><input type="range" id="logo-size" min="30" max="150" value="80" class="form-range"></div>
+        <div class="mt-2"><label>Позиция:</label>
+            <select id="logo-position" class="form-select"><option value="center">Центр</option><option value="top-left">Верх-левый</option><option value="top-right">Верх-правый</option><option value="bottom-left">Низ-левый</option><option value="bottom-right">Низ-правый</option></select>
+        </div>
+        <div class="mt-2"><label>Название:</label><input type="text" id="code-name" class="form-control" placeholder="Мой код"></div>
+        <div class="mt-2"><label>Теги:</label><input type="text" id="code-tags" class="form-control" placeholder="работа, сайт"></div>
+        
+        <button id="generate-btn" class="btn btn-primary w-100 mt-3">✨ Сгенерировать QR код</button>
+    </div>
+    
+    <div class="col-md-7">
+        <h3>👁️ Предпросмотр</h3>
+        <div class="text-center border rounded p-3 bg-light">
+            <img id="qr-preview" src="" style="max-width:100%; max-height:400px;">
+            <p id="preview-placeholder" class="text-muted mt-3">Настройте параметры и нажмите "Сгенерировать"</p>
+        </div>
+        <button id="download-btn" class="btn btn-success w-100 mt-2" style="display:none;">💾 Скачать PNG</button>
+        
+        <hr>
+        <h4>📜 История</h4>
+        <ul id="history-list" class="list-group"></ul>
+        
+        <div class="alert alert-info mt-3">
+            <strong>📊 Аналитика</strong><br>Просмотров URL: <span id="visit-count">0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentImage = null;
+
+document.getElementById('input-type').addEventListener('change', function() {
+    const t = this.value;
+    document.getElementById('field-text').style.display = t==='text'?'block':'none';
+    document.getElementById('field-url').style.display = t==='url'?'block':'none';
+    document.getElementById('field-wifi').style.display = t==='wifi'?'block':'none';
+    document.getElementById('field-sms').style.display = t==='sms'?'block':'none';
+    document.getElementById('field-email').style.display = t==='email'?'block':'none';
+    document.getElementById('field-contact').style.display = t==='contact'?'block':'none';
+});
+
+document.getElementById('logo-size').addEventListener('input', function() {
+    document.getElementById('logo-size-value').innerText = this.value;
+});
+
+function getContent() {
+    const type = document.getElementById('input-type').value;
+    let content = {};
+    if(type==='text') content.text = document.getElementById('text-content').value;
+    if(type==='url') content.url = document.getElementById('url-content').value;
+    if(type==='wifi') {
+        content.ssid = document.getElementById('wifi-ssid').value;
+        content.password = document.getElementById('wifi-password').value;
+        content.encryption = document.getElementById('wifi-encryption').value;
+    }
+    if(type==='sms') {
+        content.phone = document.getElementById('sms-phone').value;
+        content.message = document.getElementById('sms-message').value;
+    }
+    if(type==='email') {
+        content.email = document.getElementById('email-address').value;
+        content.subject = document.getElementById('email-subject').value;
+        content.body = document.getElementById('email-body').value;
+    }
+    if(type==='contact') {
+        content.name = document.getElementById('contact-name').value;
+        content.phone = document.getElementById('contact-phone').value;
+        content.email = document.getElementById('contact-email').value;
+    }
+    return content;
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+    });
+}
+
+async function loadHistory() {
+    const res = await fetch('/history');
+    const history = await res.json();
+    const list = document.getElementById('history-list');
+    list.innerHTML = history.length===0 ? '<li class="list-group-item">История пуста</li>' : '';
+    history.slice(-10).reverse().forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `<strong>${item.name||'Без имени'}</strong><br><small>${item.content}</small><br><small class="text-muted">${item.timestamp}</small>`;
+        list.appendChild(li);
+    });
+}
+
+document.getElementById('generate-btn').addEventListener('click', async function() {
+    const type = document.getElementById('input-type').value;
+    const content = getContent();
+    
+    let hasData = false;
+    if(type==='text' && content.text) hasData=true;
+    if(type==='url' && content.url) hasData=true;
+    if(type==='wifi' && (content.ssid||content.password)) hasData=true;
+    if(type==='sms' && (content.phone||content.message)) hasData=true;
+    if(type==='email' && content.email) hasData=true;
+    if(type==='contact' && (content.name||content.phone)) hasData=true;
+    
+    if(!hasData) { alert('Заполните данные'); return; }
+    
+    let logoData = null;
+    if(document.getElementById('logo-file').files[0]) {
+        logoData = await fileToBase64(document.getElementById('logo-file').files[0]);
+    }
+    
+    const btn = this;
+    btn.textContent = 'Генерация...';
+    btn.disabled = true;
+    
+    try {
+        const res = await fetch('/generate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                type: 'qr',
+                input_type: type,
+                content: content,
+                foreground: document.getElementById('fg-color').value,
+                background: document.getElementById('bg-color').value,
+                eye_style: document.getElementById('eye-style').value,
+                shape: document.getElementById('shape').value,
+                logo_size: parseInt(document.getElementById('logo-size').value),
+                logo_position: document.getElementById('logo-position').value,
+                logo_data: logoData,
+                name: document.getElementById('code-name').value,
+                tags: document.getElementById('code-tags').value
+            })
+        });
+        const result = await res.json();
+        if(result.image) {
+            document.getElementById('qr-preview').src = result.image;
+            document.getElementById('preview-placeholder').style.display = 'none';
+            document.getElementById('download-btn').style.display = 'block';
+            currentImage = result.image;
+            loadHistory();
+            if(type==='url' && content.url) {
+                let visits = localStorage.getItem('visit_'+content.url) || 0;
+                visits = parseInt(visits)+1;
+                localStorage.setItem('visit_'+content.url, visits);
+                document.getElementById('visit-count').innerText = visits;
+            }
+        } else if(result.warning) alert(result.warning);
+        else if(result.error) alert('Ошибка: '+result.error);
+    } catch(e) { alert('Ошибка: '+e.message); }
+    finally { btn.textContent = '✨ Сгенерировать QR код'; btn.disabled = false; }
+});
+
+document.getElementById('download-btn').addEventListener('click', function() {
+    if(currentImage) {
+        const a = document.createElement('a');
+        a.href = currentImage;
+        a.download = 'qrcode.png';
+        a.click();
+    }
+});
+
+loadHistory();
+document.getElementById('input-type').dispatchEvent(new Event('change'));
+</script>
+{% endblock %}
