@@ -21,10 +21,10 @@ from qrcode.image.styles.colormasks import SolidFillColorMask
 from pdf417 import encode, render_image
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'secret!')
 socketio = SocketIO(app)
 
-# Папки для хранения
+# Папки для хранения (создаём в /tmp для Render)
 if not os.path.exists('static/history'):
     os.makedirs('static/history')
 if not os.path.exists('static/uploads'):
@@ -102,7 +102,6 @@ def generate_qr(data, **kwargs):
     module_shape = kwargs.get('module_shape', 'square')
     eye_pattern = kwargs.get('eye_pattern', 'square')
     
-    # Конвертируем цвета если нужно
     if isinstance(front_color, str):
         front_color = hex_to_rgb(front_color)
     if isinstance(back_color, str):
@@ -347,7 +346,7 @@ def generate_aztec(data, **kwargs):
     return img
 
 # ============================================================
-## ГЕНЕРАТОР PDF417 (РАБОТАЕТ)
+## ГЕНЕРАТОР PDF417
 # ============================================================
 def generate_pdf417(data, **kwargs):
     front_color = kwargs.get('front_color', '#000000')
@@ -375,7 +374,6 @@ def generate_pdf417(data, **kwargs):
                 else:
                     pixels[x, y] = back_color
         
-        # Масштабируем для лучшего отображения
         scale = 2
         new_width = width * scale
         new_height = height * scale
@@ -525,5 +523,14 @@ def generate():
 def get_history():
     return jsonify(load_history())
 
+# ============================================================
+## ЗАПУСК (для локального и серверного режима)
+# ============================================================
 if __name__ == '__main__':
-    socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+    # Локальный запуск
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
+else:
+    # Для Gunicorn на Render
+    # Gunicorn сам запустит приложение
+    pass
