@@ -1,8 +1,411 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center py-5">
-    <h1>🔲 Data Matrix</h1>
-    <div class="alert alert-warning">⚠️ Данный тип кода будет доступен в следующей версии</div>
-    <a href="/qr" class="btn btn-primary">Вернуться к QR</a>
+<div class="row">
+    <div class="col-md-5">
+        <h3>Ввод данных для Aztec кода</h3>
+        
+        <div class="mb-3">
+            <label class="form-label">Тип данных:</label>
+            <select id="input-type" class="form-select">
+                <option value="text">Текст</option>
+                <option value="url">URL</option>
+                <option value="wifi">Wi-Fi</option>
+                <option value="sms">SMS</option>
+                <option value="email">E-mail</option>
+                <option value="contact">Контакт (vCard)</option>
+            </select>
+        </div>
+
+        <div id="field-text">
+            <label class="form-label">Текст:</label>
+            <input type="text" id="text-content" class="form-control" placeholder="Введите текст" value="Hello World">
+        </div>
+
+        <div id="field-url" style="display:none;">
+            <label class="form-label">URL:</label>
+            <input type="url" id="url-content" class="form-control" placeholder="https://example.com">
+        </div>
+
+        <div id="field-wifi" style="display:none;">
+            <label class="form-label">SSID:</label>
+            <input type="text" id="wifi-ssid" class="form-control" placeholder="Имя сети">
+            <label class="form-label mt-2">Пароль:</label>
+            <input type="text" id="wifi-password" class="form-control" placeholder="Пароль">
+            <label class="form-label mt-2">Шифрование:</label>
+            <select id="wifi-encryption" class="form-select">
+                <option value="WPA">WPA/WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">Без пароля</option>
+            </select>
+        </div>
+
+        <div id="field-sms" style="display:none;">
+            <label class="form-label">Номер телефона:</label>
+            <input type="tel" id="sms-phone" class="form-control" placeholder="+71234567890">
+            <label class="form-label mt-2">Сообщение:</label>
+            <textarea id="sms-message" class="form-control" rows="2" placeholder="Текст SMS"></textarea>
+        </div>
+
+        <div id="field-email" style="display:none;">
+            <label class="form-label">Email:</label>
+            <input type="email" id="email-address" class="form-control" placeholder="user@example.com">
+            <label class="form-label mt-2">Тема:</label>
+            <input type="text" id="email-subject" class="form-control" placeholder="Тема письма">
+            <label class="form-label mt-2">Текст:</label>
+            <textarea id="email-body" class="form-control" rows="2" placeholder="Текст письма"></textarea>
+        </div>
+
+        <div id="field-contact" style="display:none;">
+            <label class="form-label">Имя:</label>
+            <input type="text" id="contact-name" class="form-control" placeholder="Иван Иванов">
+            <label class="form-label mt-2">Телефон:</label>
+            <input type="tel" id="contact-phone" class="form-control" placeholder="+71234567890">
+            <label class="form-label mt-2">Email:</label>
+            <input type="email" id="contact-email" class="form-control" placeholder="ivan@example.com">
+        </div>
+
+        <hr>
+        <h4>Кастомизация Aztec кода</h4>
+        
+        <div class="row">
+            <div class="col-6">
+                <label class="form-label">Цвет кода:</label>
+                <input type="color" id="fg-color" value="#000000" class="form-control form-control-color">
+            </div>
+            <div class="col-6">
+                <label class="form-label">Цвет фона:</label>
+                <input type="color" id="bg-color" value="#ffffff" class="form-control form-control-color">
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <label class="form-label">Размер модуля:</label>
+            <input type="range" id="module-size" min="4" max="16" value="8" class="form-range">
+            <span id="module-size-value">8</span> px
+        </div>
+
+        <div class="mt-3">
+            <label class="form-label">Название (для истории):</label>
+            <input type="text" id="code-name" class="form-control" placeholder="Мой код">
+        </div>
+
+        <div class="mt-2">
+            <label class="form-label">Теги:</label>
+            <input type="text" id="code-tags" class="form-control" placeholder="работа, сайт, визитка">
+        </div>
+        
+        <button id="generate-btn" class="btn btn-primary w-100 mt-4">
+            Сгенерировать Aztec код
+        </button>
+        
+        <div id="loading-indicator" style="display:none; text-align:center; margin-top:10px;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p>Генерация Aztec кода...</p>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <h3>Предпросмотр</h3>
+        <div class="text-center border rounded p-3 bg-light" style="min-height: 450px;">
+            <img id="aztec-preview" src="" alt="Aztec код будет здесь" style="max-width:100%; max-height:400px;">
+            <p id="preview-placeholder" class="text-muted mt-3">
+                Настройте параметры и нажмите "Сгенерировать"
+            </p>
+        </div>
+        
+        <button id="download-btn" class="btn btn-success w-100 mt-2" style="display:none;">
+            Скачать PNG
+        </button>
+        
+        <hr>
+        <h4>Структура Aztec кода</h4>
+        <div class="alert alert-info">
+            <strong>Aztec Code</strong> - двумерный матричный код, изобретённый в 1995 году.
+            <br><br>
+            <strong>Структура:</strong>
+            <ul>
+                <li>Центральный "бычий глаз" (bull's-eye) 9x9 или 13x13 для локации</li>
+                <li>Концентрические квадратные кольца (layers) вокруг центра</li>
+                <li>Угловые метки ориентации: 3, 2, 1, 0 чёрных пикселей в углах ядра</li>
+                <li>Не требует тихой зоны (quiet zone) вокруг кода</li>
+                <li>Размеры: 15x15, 19x19, 23x23, 27x27, 31x31, 35x35 и т.д.</li>
+            </ul>
+            <strong>Применение:</strong> билеты, транспорт, авиация, банковские документы.
+        </div>
+        
+        <h4>История кодов</h4>
+        <div id="history-container" style="max-height: 300px; overflow-y: auto;">
+            <ul id="history-list" class="list-group"></ul>
+        </div>
+    </div>
 </div>
+
+<script>
+console.log("Aztec JavaScript загружен");
+
+let currentImageData = null;
+
+function getElementValue(id, defaultValue = '') {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn(`Элемент ${id} не найден`);
+        return defaultValue;
+    }
+    return el.value;
+}
+
+// Переключение полей ввода
+const inputTypeSelect = document.getElementById('input-type');
+if (inputTypeSelect) {
+    inputTypeSelect.addEventListener('change', function() {
+        const type = this.value;
+        const fields = ['field-text', 'field-url', 'field-wifi', 'field-sms', 'field-email', 'field-contact'];
+        fields.forEach(fieldId => {
+            const el = document.getElementById(fieldId);
+            if (el) {
+                el.style.display = fieldId === `field-${type}` ? 'block' : 'none';
+            }
+        });
+    });
+}
+
+// Отображение размера модуля
+const moduleSider = document.getElementById('module-size');
+const moduleSizeSpan = document.getElementById('module-size-value');
+if (moduleSider && moduleSizeSpan) {
+    moduleSider.addEventListener('input', function() {
+        moduleSizeSpan.textContent = this.value;
+    });
+}
+
+function getContentData() {
+    const inputTypeSelect = document.getElementById('input-type');
+    if (!inputTypeSelect) return {};
+    
+    const inputType = inputTypeSelect.value;
+    let content = {};
+    
+    switch(inputType) {
+        case 'text':
+            content.text = getElementValue('text-content', '');
+            break;
+        case 'url':
+            content.url = getElementValue('url-content', '');
+            break;
+        case 'wifi':
+            content.ssid = getElementValue('wifi-ssid', '');
+            content.password = getElementValue('wifi-password', '');
+            content.encryption = getElementValue('wifi-encryption', 'WPA');
+            break;
+        case 'sms':
+            content.phone = getElementValue('sms-phone', '');
+            content.message = getElementValue('sms-message', '');
+            break;
+        case 'email':
+            content.email = getElementValue('email-address', '');
+            content.subject = getElementValue('email-subject', '');
+            content.body = getElementValue('email-body', '');
+            break;
+        case 'contact':
+            content.name = getElementValue('contact-name', '');
+            content.phone = getElementValue('contact-phone', '');
+            content.email = getElementValue('contact-email', '');
+            break;
+    }
+    
+    return content;
+}
+
+async function loadHistory() {
+    try {
+        const response = await fetch('/history');
+        const history = await response.json();
+        
+        const historyList = document.getElementById('history-list');
+        if (!historyList) return;
+        
+        historyList.innerHTML = '';
+        
+        const aztecHistory = history.filter(item => item.type === 'aztec');
+        
+        if (aztecHistory.length === 0) {
+            historyList.innerHTML = '<li class="list-group-item text-muted">История Aztec кодов пуста</li>';
+            return;
+        }
+        
+        aztecHistory.slice(-10).reverse().forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+                <strong>${escapeHtml(item.name || 'Без имени')}</strong>
+                ${item.tags ? `<span class="badge bg-secondary float-end">${escapeHtml(item.tags)}</span>` : ''}
+                <br>
+                <small class="text-muted">Тип: ${escapeHtml(item.input_type || 'text')}</small>
+                <br>
+                <small>${escapeHtml(item.content.substring(0, 50))}${item.content.length > 50 ? '...' : ''}</small>
+                <br>
+                <small class="text-muted">${escapeHtml(item.timestamp)}</small>
+            `;
+            historyList.appendChild(li);
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки истории:', error);
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Генерация Aztec кода
+const generateBtn = document.getElementById('generate-btn');
+if (generateBtn) {
+    generateBtn.addEventListener('click', async function() {
+        console.log("Кнопка нажата!");
+        
+        const inputType = getElementValue('input-type', 'text');
+        const content = getContentData();
+        
+        let hasData = false;
+        if (inputType === 'text' && content.text) hasData = true;
+        if (inputType === 'url' && content.url) hasData = true;
+        if (inputType === 'wifi' && (content.ssid || content.password)) hasData = true;
+        if (inputType === 'sms' && (content.phone || content.message)) hasData = true;
+        if (inputType === 'email' && content.email) hasData = true;
+        if (inputType === 'contact' && (content.name || content.phone)) hasData = true;
+        
+        if (!hasData) {
+            alert('Пожалуйста, заполните данные для генерации');
+            return;
+        }
+        
+        const requestData = {
+            type: 'aztec',
+            input_type: inputType,
+            content: content,
+            foreground: getElementValue('fg-color', '#000000'),
+            background: getElementValue('bg-color', '#ffffff'),
+            module_size: parseInt(getElementValue('module-size', '8')),
+            name: getElementValue('code-name', 'Без имени'),
+            tags: getElementValue('code-tags', '')
+        };
+        
+        console.log("Отправляем запрос:", requestData);
+        
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const originalText = generateBtn.textContent;
+        generateBtn.textContent = 'Генерация...';
+        generateBtn.disabled = true;
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+        
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            const aztecPreview = document.getElementById('aztec-preview');
+            const previewPlaceholder = document.getElementById('preview-placeholder');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            if (result.image && aztecPreview) {
+                aztecPreview.src = result.image;
+                if (previewPlaceholder) previewPlaceholder.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'block';
+                currentImageData = result.image;
+                
+                await loadHistory();
+                
+                console.log("Aztec код успешно сгенерирован!");
+                
+            } else if (result.warning) {
+                alert('Внимание: ' + result.warning);
+            } else if (result.error) {
+                alert('Ошибка: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Ошибка при отправке запроса:', error);
+            alert('Ошибка при генерации: ' + error.message);
+        } finally {
+            generateBtn.textContent = originalText;
+            generateBtn.disabled = false;
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+        }
+    });
+}
+
+// Скачивание PNG
+const downloadBtn = document.getElementById('download-btn');
+if (downloadBtn) {
+    downloadBtn.addEventListener('click', function() {
+        if (currentImageData) {
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            link.download = `aztec_${timestamp}.png`;
+            link.href = currentImageData;
+            link.click();
+        }
+    });
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM загружен");
+    loadHistory();
+    
+    const inputTypeSelect = document.getElementById('input-type');
+    if (inputTypeSelect) {
+        inputTypeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    }
+});
+</script>
+
+<style>
+#aztec-preview {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+.list-group-item {
+    font-size: 0.9em;
+    transition: transform 0.2s;
+}
+
+.list-group-item:hover {
+    transform: translateX(5px);
+}
+
+.form-range {
+    cursor: pointer;
+}
+
+#loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 9999;
+    text-align: center;
+}
+</style>
 {% endblock %}

@@ -1,45 +1,230 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="text-center py-5">
-    <h1>🎨 Конструктор матричных кодов</h1>
-    <p class="lead">Создавайте кастомизированные QR-коды и другие матричные коды</p>
+    <h1>Конструктор матричных кодов</h1>
+    <p class="lead">Создавайте кастомизированные QR-коды, Data Matrix, Aztec и PDF417 коды</p>
+    
     <div class="row mt-5">
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h3>✅ QR Code</h3>
-                    <p>Самый популярный тип кода</p>
-                    <a href="/qr" class="btn btn-primary">Создать QR</a>
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px;">📱</div>
+                    <h3 class="card-title mt-2">QR Code</h3>
+                    <p class="card-text">
+                        Самый популярный тип кода.<br>
+                        Поддержка: текст, URL, Wi-Fi, SMS, Email, контакт.<br>
+                        Кастомизация: цвета, форма точек, стиль угловых узоров, логотип.
+                    </p>
+                    <a href="/qr" class="btn btn-primary">Создать QR код</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h3>🔲 Data Matrix</h3>
-                    <p>Компактный код для малых размеров</p>
-                    <a href="/datamatrix" class="btn btn-secondary">Скоро</a>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px;">🔲</div>
+                    <h3 class="card-title mt-2">Data Matrix</h3>
+                    <p class="card-text">
+                        Компактный код для малых размеров.<br>
+                        Поддержка: текст, URL, Wi-Fi, SMS, Email, контакт.<br>
+                        Кастомизация: цвета, размер модуля.
+                    </p>
+                    <a href="/datamatrix" class="btn btn-primary">Создать Data Matrix</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h3>📐 Aztec</h3>
-                    <p>Код для билетов и транспорта</p>
-                    <a href="/aztec" class="btn btn-secondary">Скоро</a>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px;">📐</div>
+                    <h3 class="card-title mt-2">Aztec Code</h3>
+                    <p class="card-text">
+                        Код с центральным "бычьим глазом".<br>
+                        Поддержка: текст, URL, Wi-Fi, SMS, Email, контакт.<br>
+                        Кастомизация: цвета, размер модуля.
+                    </p>
+                    <a href="/aztec" class="btn btn-primary">Создать Aztec код</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px;">📄</div>
+                    <h3 class="card-title mt-2">PDF417</h3>
+                    <p class="card-text">
+                        Stacked линейный код для документов.<br>
+                        Поддержка: текст, URL, Wi-Fi, SMS, Email, контакт.<br>
+                        Кастомизация: цвета, ширина и высота модуля.
+                    </p>
+                    <a href="/pdf417" class="btn btn-primary">Создать PDF417 код</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h4>Общая статистика</h4>
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <h3 id="qr-count">0</h3>
+                            <p>QR кодов</p>
+                        </div>
+                        <div class="col-3">
+                            <h3 id="dm-count">0</h3>
+                            <p>Data Matrix</p>
+                        </div>
+                        <div class="col-3">
+                            <h3 id="aztec-count">0</h3>
+                            <p>Aztec кодов</p>
+                        </div>
+                        <div class="col-3">
+                            <h3 id="pdf417-count">0</h3>
+                            <p>PDF417 кодов</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
             <div class="card">
                 <div class="card-body">
-                    <h3>📄 PDF417</h3>
-                    <p>Для документов и водительских прав</p>
-                    <a href="/pdf417" class="btn btn-secondary">Скоро</a>
+                    <h4>Последние созданные коды</h4>
+                    <div id="recent-history" style="max-height: 300px; overflow-y: auto;">
+                        <ul id="recent-list" class="list-group">
+                            <li class="list-group-item text-muted">Загрузка...</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Загрузка статистики и истории
+async function loadStats() {
+    try {
+        const response = await fetch('/history');
+        const history = await response.json();
+        
+        // Подсчёт статистики
+        const qrCount = history.filter(item => item.type === 'qr').length;
+        const dmCount = history.filter(item => item.type === 'datamatrix').length;
+        const aztecCount = history.filter(item => item.type === 'aztec').length;
+        const pdf417Count = history.filter(item => item.type === 'pdf417').length;
+        
+        const qrElement = document.getElementById('qr-count');
+        const dmElement = document.getElementById('dm-count');
+        const aztecElement = document.getElementById('aztec-count');
+        const pdf417Element = document.getElementById('pdf417-count');
+        
+        if (qrElement) qrElement.textContent = qrCount;
+        if (dmElement) dmElement.textContent = dmCount;
+        if (aztecElement) aztecElement.textContent = aztecCount;
+        if (pdf417Element) pdf417Element.textContent = pdf417Count;
+        
+        // Последние 5 кодов
+        const recentList = document.getElementById('recent-list');
+        if (!recentList) return;
+        
+        recentList.innerHTML = '';
+        
+        const recent = history.slice(-5).reverse();
+        
+        if (recent.length === 0) {
+            recentList.innerHTML = '<li class="list-group-item text-muted">Нет созданных кодов</li>';
+        } else {
+            recent.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                
+                let typeIcon = '';
+                let typeName = '';
+                if (item.type === 'qr') {
+                    typeIcon = '📱';
+                    typeName = 'QR';
+                } else if (item.type === 'datamatrix') {
+                    typeIcon = '🔲';
+                    typeName = 'Data Matrix';
+                } else if (item.type === 'aztec') {
+                    typeIcon = '📐';
+                    typeName = 'Aztec';
+                } else if (item.type === 'pdf417') {
+                    typeIcon = '📄';
+                    typeName = 'PDF417';
+                } else {
+                    typeIcon = '📄';
+                    typeName = item.type;
+                }
+                
+                li.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${escapeHtml(item.name || 'Без имени')}</strong>
+                            <br>
+                            <small class="text-muted">${typeIcon} ${typeName} | ${escapeHtml(item.input_type || 'text')}</small>
+                            <br>
+                            <small class="text-muted">${escapeHtml(item.timestamp)}</small>
+                        </div>
+                        <div>
+                            ${item.tags ? `<span class="badge bg-secondary">${escapeHtml(item.tags)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                recentList.appendChild(li);
+            });
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки статистики:', error);
+        const recentList = document.getElementById('recent-list');
+        if (recentList) {
+            recentList.innerHTML = '<li class="list-group-item text-danger">Ошибка загрузки</li>';
+        }
+    }
+}
+
+// Функция для экранирования HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Загрузка при старте
+document.addEventListener('DOMContentLoaded', function() {
+    loadStats();
+    // Обновляем статистику каждые 10 секунд
+    setInterval(loadStats, 10000);
+});
+</script>
+
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+#recent-list .list-group-item {
+    transition: background-color 0.2s;
+}
+
+#recent-list .list-group-item:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+</style>
 {% endblock %}

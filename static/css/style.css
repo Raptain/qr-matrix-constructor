@@ -1,15 +1,50 @@
 body {
     transition: background-color 0.3s;
 }
+
 .card {
     margin-bottom: 20px;
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
+
 .card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
-#qr-preview {
+
+#qr-preview, #dm-preview, #aztec-preview {
     max-width: 100%;
     max-height: 400px;
     object-fit: contain;
+}
+
+.list-group-item {
+    font-size: 0.9em;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.list-group-item:hover {
+    transform: translateX(5px);
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.form-range {
+    cursor: pointer;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.btn-primary {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
 }
