@@ -524,13 +524,9 @@ def get_history():
     return jsonify(load_history())
 
 # ============================================================
-## ЗАПУСК (для локального и серверного режима)
+# ЗАПУСК
 # ============================================================
 if __name__ == '__main__':
-    # Локальный запуск
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-else:
-    # Для Gunicorn на Render
-    # Gunicorn сам запустит приложение
     pass
