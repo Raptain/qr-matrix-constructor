@@ -1,8 +1,8 @@
-Flask==2.3.3
-gunicorn==21.2.0
-qrcode==7.4.2
-Pillow==10.0.0
-numpy==1.24.3
-pdf417==0.8.1
-flask-socketio==5.3.4
-python-socketio==5.9.0
+flask
+gunicorn
+qrcode
+pillow
+numpy
+pdf417
+flask-socketio
+python-socketio
